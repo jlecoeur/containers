@@ -5,23 +5,24 @@
 FROM px4io/px4-dev-base
 MAINTAINER Daniel Agar <daniel@agar.ca>
 
-RUN dpkg --add-architecture i386 \
-	&& apt-get update \
+RUN apt-get update \
 	&& apt-get -y --quiet --no-install-recommends install \
+		autoconf \
+		automake \
 		bison \
+		build-essential \
+		file \
 		flex \
 		genromfs \
 		gperf \
-		libc6:i386 \
-		libgcc1:i386 \
 		libncurses-dev \
-		libstdc++5:i386 \
-		libstdc++6:i386 \
+		libtool \
+		pkg-config \
 	&& apt-get -y autoremove \
 	&& apt-get clean autoclean \
-	# gcc-arm-embedded 5-2016-q3-update (https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads)
+	# gcc-arm-embedded 6-2017-q2-update (https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads)
 	&& mkdir -p /opt/gcc && cd /opt/gcc \
-	&& wget -qO- "https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_4-2016q3/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2?product=GNU%20ARM%20Embedded%20Toolchain,32-bit,,Linux,5-2016-q3-update" | tar jx --strip 1 \
+	&& wget -qO- "https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2" | tar jx --strip 1 \
 	&& rm -rf /opt/gcc/share/doc \
 	# manual ccache setup for arm-none-eabi-g++/arm-none-eabi-gcc
 	&& ln -s /usr/bin/ccache /usr/lib/ccache/arm-none-eabi-g++ \
@@ -29,7 +30,8 @@ RUN dpkg --add-architecture i386 \
 	# nuttx tools
 	&& git clone --depth 1 https://bitbucket.org/nuttx/tools.git /tmp/tools \
 	&& cd /tmp/tools/kconfig-frontends \
-	&& ./configure --enable-mconf -prefix=/usr && make && make install \
+	&& autoreconf -f -i \
+	&& ./configure --enable-mconf --disable-nconf --disable-gconf --disable-qconf -prefix=/usr && make && make install \
 	# cleanup
 	&& rm -rf /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
 
